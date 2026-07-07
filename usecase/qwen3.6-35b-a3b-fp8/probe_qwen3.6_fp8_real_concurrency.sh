@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-source /data/miniconda3/etc/profile.d/conda.sh
-conda activate sglang
-export OPENAI_API_KEY="${OPENAI_API_KEY:-shuzuan2025-minimax}"
+# Qwen3.6-35B-A3B-FP8 / 六卡4090 TP4 真实并发探测 wrapper
+source /home/shuzuan/miniconda3/etc/profile.d/conda.sh
+conda activate sglang_env
+export OPENAI_API_KEY="${OPENAI_API_KEY:-EMPTY}"
+export HF_HUB_OFFLINE=1
+export TRANSFORMERS_OFFLINE=1
+export BENCH_TOKENIZER="${BENCH_TOKENIZER:-/home/shuzuan/Project/lin/model/Qwen3.6-35B-A3B-FP8}"
 
 cd "$(dirname "$0")"
 
 python probe_sglang_real_concurrency.py \
   --host "${HOST:-127.0.0.1}" \
-  --port "${PORT:-8000}" \
+  --port "${PORT:-11450}" \
   --api-key "$OPENAI_API_KEY" \
-  --server-log "${SERVER_LOG:-/data/lin/modelserver/logs/kimi_rank0.log}" \
+  --server-log "${SERVER_LOG:-/home/shuzuan/Project/lin/modelserver/logs/qwen3.6-fp8-tp4.log}" \
   --results-dir "${RESULTS_DIR:-results/real_concurrency_$(date +%Y%m%d_%H%M%S)}" \
   --workloads "${WORKLOADS:-8192:1024,16384:1024,32768:1024,65536:1024,131072:1024,245760:512}" \
   --client-concurrency "${CLIENT_CONCURRENCY:-200}" \
@@ -24,4 +28,3 @@ python probe_sglang_real_concurrency.py \
   --target-token-usage "${TARGET_TOKEN_USAGE:-0.90}" \
   ${USE_FIRST_MAX_FOR_REST:+--use-first-max-for-rest} \
   "$@"
-
